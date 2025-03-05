@@ -8,3 +8,5 @@ Route::post('/user/create', [UserController::class, 'createUser']);
 Route::post('/user/update', [UserController::class, 'updateUser']);
 Route::delete('/user/delete', [UserController::class, 'deleteUser']);
 Route::get('/users/get-all', [UserController::class, 'getAll']); //changes mema
+//add branch
+
