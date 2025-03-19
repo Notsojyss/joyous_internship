@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Item;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Models\UserItem;
 
 class UserController extends Controller
 {
@@ -20,10 +23,21 @@ return User::create(['full_name' => $request->full_name,
     'password' => $request->password ]);
 
 }
-public function getAll(Request $request){
-    // dd('test');
-    return User::get();//->take($request->count);
+public function getAll( ){
+
+    // Facade
+    return DB::table('users')
+        ->whereIn('users.id', [1,2])
+        ->leftJoin('items', 'users.id', '=', 'items.user_id')
+        ->get();
+
+    // Eloquent
+    return User::with(['items'])->get();
 }
+public function getMoney( ){
+
+
+    }
 public function updateUser(Request $request){
     //dd($request->name);
 
@@ -82,5 +96,55 @@ public function deleteUser(Request $request){
         $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logged out successfully']);
     }
+    public function buyItem(Request $request)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'item_id' => 'required|exists:items,id',
+                'quantity' => 'required|integer|min:1', // Ensure quantity is required
+            ]);
+
+            $user = auth()->user(); // Ensure user is authenticated
+
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $item = Item::findOrFail($request->item_id);
+
+            // Check if the user has enough money
+            $totalCost = $item->price * $request->quantity;
+            if ($user->money < $totalCost) {
+                return response()->json(['error' => 'Not enough money'], 400);
+            }
+
+            // Deduct money from user
+            $user->money -= $totalCost;
+            $user->save();
+
+            // Add or update the item in the user's inventory
+            $userItem = UserItem::where('user_id', $user->id)
+                ->where('item_id', $item->id)
+                ->first();
+
+            if ($userItem) {
+                $userItem->quantity += $request->quantity;
+                $userItem->save();
+            } else {
+                UserItem::create([
+                    'user_id' => $user->id,
+                    'item_id' => $item->id,
+                    'quantity' => $request->quantity,
+                ]);
+            }
+
+            return response()->json(['message' => 'Item purchased successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
 
 }

@@ -16,8 +16,15 @@ class ItemController extends Controller
     }
     public function getShopitems(Request $request)
     {
-        return Item::where('user_id', 16)->get();
+        return Item::get();
     }
+
+
+
+
+
+
+
 
     /**
      * Show the form for creating a new resource.

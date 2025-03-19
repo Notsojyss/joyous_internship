@@ -13,3 +13,6 @@ Route::post('/user/login', [UserController::class, 'loginUser']);
 Route::middleware('auth:sanctum')->post('/user/logout', [UserController::class, 'logoutUser']);
 Route::get('/items/get-all', [ItemController::class, 'getAllitems']);
 Route::get('/item/get-shopitems', [ItemController::class, 'getShopitems']);
+Route::middleware(['auth:sanctum'])->post('/user/buy-item', [UserController::class, 'buyItem']);
+
+
