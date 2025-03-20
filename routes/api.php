@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\MarketController;
+
 
 Route::post('/user/create', [UserController::class, 'createUser']);
 Route::post('/user/update', [UserController::class, 'updateUser']);
@@ -14,5 +16,7 @@ Route::middleware('auth:sanctum')->post('/user/logout', [UserController::class, 
 Route::get('/items/get-all', [ItemController::class, 'getAllitems']);
 Route::get('/item/get-shopitems', [ItemController::class, 'getShopitems']);
 Route::middleware(['auth:sanctum'])->post('/user/buy-item', [UserController::class, 'buyItem']);
-
-
+Route::middleware('auth:sanctum')->get('/user/getMoney', [UserController::class, 'getMoney']);
+Route::middleware('auth:sanctum')->get('/user/getUsersitem', [UserController::class, 'getUserItems']);
+Route::middleware('auth:sanctum')->get('/market/sell', [MarketController::class, 'sellItem']);
+Route::middleware('auth:sanctum')->get('/market/get-activelisting', [MarketController::class, 'getActive']);
