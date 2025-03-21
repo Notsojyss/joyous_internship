@@ -74,6 +74,56 @@ class MarketController extends Controller
 
         return response()->json(['message' => 'Item listed on the market'], 200);
     }
+    public function getUserItemForSale(Request $request) {
+        $userId = auth()->id(); // Get the logged-in user's ID
 
+        $items = DB::table('users')
+            ->leftJoin('market_listings', 'users.id', '=', 'market_listings.user_id')
+            ->leftJoin('items', 'market_listings.item_id', '=', 'items.id')
+            ->select([
+                'users.id as user_id',
+                'users.username',
+                'items.item_name',
+                'items.description',
+                'items.rarity',
+                'items.image',
+                'market_listings.id as listing_id',
+                'market_listings.quantity',
+                'market_listings.price',
+                'market_listings.status'
+            ])
+            ->where('market_listings.status', 'active')
+            ->where('users.id', $userId)
+            ->get();
 
+        return response()->json($items);
+    }
+    public function cancelListing(Request $request)
+    {
+        $request->validate([
+            'listing_id' => 'required|exists:market_listings,id',
+        ]);
+
+        $user = Auth::user();
+        $listing = DB::table('market_listings')
+            ->where('id', $request->listing_id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$listing) {
+            return response()->json(['message' => 'Listing not found'], 404);
+        }
+
+        DB::table('user_items')->updateOrInsert(
+            ['user_id' => $user->id, 'item_id' => $listing->item_id],
+            ['quantity' => DB::raw("quantity + $listing->quantity"),
+            'updated_at' => now(),
+            'created_at' => DB::raw('IFNULL(created_at, NOW())')]
+        );
+
+        // Remove listing from market
+        DB::table('market_listings')->where('id', $listing->id)->delete();
+
+        return response()->json(['message' => 'Listing canceled and item returned'], 200);
+    }
 }

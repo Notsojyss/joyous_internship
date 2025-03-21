@@ -18,5 +18,7 @@ Route::get('/item/get-shopitems', [ItemController::class, 'getShopitems']);
 Route::middleware(['auth:sanctum'])->post('/user/buy-item', [UserController::class, 'buyItem']);
 Route::middleware('auth:sanctum')->get('/user/getMoney', [UserController::class, 'getMoney']);
 Route::middleware('auth:sanctum')->get('/user/getUsersitem', [UserController::class, 'getUserItems']);
-Route::middleware('auth:sanctum')->get('/market/sell', [MarketController::class, 'sellItem']);
+Route::middleware('auth:sanctum')->post('/market/sellitem', [MarketController::class, 'sellItem']);
+Route::middleware('auth:sanctum')->post('/market/cancelsellitem', [MarketController::class, 'cancelListing']);
 Route::middleware('auth:sanctum')->get('/market/get-activelisting', [MarketController::class, 'getActive']);
+Route::middleware('auth:sanctum')->get('/market/get-useritemforsale', [MarketController::class, 'getUserItemForSale']);

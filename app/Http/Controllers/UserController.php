@@ -46,6 +46,7 @@ public function getUserItems(Request $request) {
             'items.description',
             'items.rarity',
             'items.image',
+            'user_items.item_id as item_id',
             'user_items.quantity',
         )
         ->where('users.id', $userId)
@@ -64,6 +65,7 @@ public function getUserItems(Request $request) {
                 'items' => $items->map(function ($item) {
                     return [
                         'item_name' => $item->item_name,
+                        'item_id' => $item->item_id,
                         'description' => $item->description,
                         'rarity' => $item->rarity,
                         'image' => $item->image,
@@ -81,6 +83,8 @@ public function getUserItems(Request $request) {
 //    // Eloquent
 //    return User::with(['items'])->get();
 }
+
+
 public function getMoney(Request $request)
 {
     try {
@@ -155,10 +159,9 @@ public function deleteUser(Request $request){
     public function buyItem(Request $request)
     {
         try {
-            // Validate request
             $request->validate([
                 'item_id' => 'required|exists:items,id',
-                'quantity' => 'required|integer|min:1', // Ensure quantity is required
+                'quantity' => 'required|integer|min:1',
             ]);
 
             $user = auth()->user();
@@ -167,41 +170,53 @@ public function deleteUser(Request $request){
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            $item = Item::findOrFail($request->item_id);
+            $item = DB::table('items')->where('id', $request->item_id)->first();
 
-            // Check if the user has enough money
+            if (!$item) {
+                return response()->json(['error' => 'Item not found'], 404);
+            }
             $totalCost = $item->price * $request->quantity;
             if ($user->money < $totalCost) {
                 return response()->json(['error' => 'Not enough money'], 400);
-
             }
 
-            // Deduct money from user
-            $user->money -= $totalCost;
-            $user->save();
+            DB::beginTransaction(); // Start transaction
 
-            // Add or update the item in the user's inventory
-            $userItem = UserItem::where('user_id', $user->id)
+            // Deduct money from user
+            DB::table('users')->where('id', $user->id)->decrement('money', $totalCost);
+
+            $userItem = DB::table('user_items')
+                ->where('user_id', $user->id)
                 ->where('item_id', $item->id)
                 ->first();
 
             if ($userItem) {
-                $userItem->quantity += $request->quantity;
-                $userItem->save();
+                // Update item quantity
+                DB::table('user_items')
+                    ->where('user_id', $user->id)
+                    ->where('item_id', $item->id)
+                    ->increment('quantity', $request->quantity);
             } else {
-                UserItem::create([
+
+
+                DB::table('user_items')->insert([
                     'user_id' => $user->id,
                     'item_id' => $item->id,
                     'quantity' => $request->quantity,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
 
-            return response()->json(['message' => 'Item purchased successfully'], 200);
+            DB::commit();
 
+            return response()->json(['message' => 'Item purchased successfully'], 200);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
 
 
 
