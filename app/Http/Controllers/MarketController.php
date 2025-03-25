@@ -21,6 +21,7 @@ class MarketController extends Controller
             ->where('market_listings.status', 'active')
             ->select(
                 'market_listings.*',
+                'items.id as item_id',
                 'items.item_name',
                 'items.image',
                 'items.rarity',
@@ -30,29 +31,6 @@ class MarketController extends Controller
             ->get();
 
         return response()->json($listings);
-    }
-    public function getItemHistory(Request $request)
-    {
-        if (!Auth::check()) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        $itemhistory = DB::table('market_listings')
-            ->join('items', 'market_listings.item_id', '=', 'items.id')
-            ->join('users', 'market_listings.user_id', '=', 'users.id')
-            ->where('market_listings.status', 'sold')
-            ->select(
-                'market_listings.id',
-                'market_listings.price as market_price',
-                'market_listings.updated_at as market_updated_at',
-                'market_listings.',
-                'items.item_name',
-                'users.username',
-
-            )
-            ->get();
-
-        return response()->json($itemhistory);
     }
 
     public function sellItem(Request $request)
@@ -219,7 +197,7 @@ class MarketController extends Controller
                 DB::table('users')->where('id', $seller)->increment('money', $totalCost);
                     DB::table('market_listings')
                         ->where('id', $listing->id)
-                        ->update(['quantity' => 0, 'status' => 'sold', 'updated_at' => now()]);
+                        ->update(['status' => 'sold', 'updated_at' => now()]);
             }
 
             // Check if buyer already owns the item
@@ -253,6 +231,33 @@ class MarketController extends Controller
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+    public function getItemHistory(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        $request->validate([
+            'item_id' => 'required|exists:items,id',
+        ]);
+
+        $itemhistory = DB::table('market_listings')
+            ->join('items', 'market_listings.item_id', '=', 'items.id')
+            ->join('users', 'market_listings.user_id', '=', 'users.id')
+            ->where('market_listings.status', 'sold')
+            ->where('market_listings.item_id', $request->item_id)
+            ->select(
+                'market_listings.id',
+                'items.item_name',
+                'market_listings.price as price per item',
+                'market_listings.quantity as quantity',
+                'market_listings.updated_at as market_updated_at',
+                'users.username',
+            )
+            ->get();
+
+        return response()->json($itemhistory);
     }
 }
 

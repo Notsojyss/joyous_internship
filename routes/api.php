@@ -22,3 +22,4 @@ Route::middleware('auth:sanctum')->post('/market/sellitem', [MarketController::c
 Route::middleware('auth:sanctum')->post('/market/cancelsellitem', [MarketController::class, 'cancelListing']);
 Route::middleware('auth:sanctum')->get('/market/get-activelisting', [MarketController::class, 'getActive']);
 Route::middleware('auth:sanctum')->get('/market/get-useritemforsale', [MarketController::class, 'getUserItemForSale']);
+Route::middleware('auth:sanctum')->get('/market/get-itemhistory', [MarketController::class, 'getItemHistory']);
