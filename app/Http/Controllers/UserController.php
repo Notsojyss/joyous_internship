@@ -156,66 +156,6 @@ public function deleteUser(Request $request){
         $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logged out successfully']);
     }
-//    public function buyItem(Request $request)
-//    {
-//        try {
-//            $request->validate([
-//                'item_id' => 'required|exists:items,id',
-//                'quantity' => 'required|integer|min:1',
-//            ]);
-//
-//            $user = auth()->user();
-//
-//            if (!$user) {
-//                return response()->json(['error' => 'Unauthorized'], 401);
-//            }
-//
-//            $item = DB::table('items')->where('id', $request->item_id)->first();
-//
-//            if (!$item) {
-//                return response()->json(['error' => 'Item not found'], 404);
-//            }
-//            $totalCost = $item->price * $request->quantity;
-//            if ($user->money < $totalCost) {
-//                return response()->json(['error' => 'Not enough money'], 400);
-//            }
-//
-//            DB::beginTransaction(); // Start transaction
-//
-//            // Deduct money from user
-//            DB::table('users')->where('id', $user->id)->decrement('money', $totalCost);
-//
-//            $userItem = DB::table('user_items')
-//                ->where('user_id', $user->id)
-//                ->where('item_id', $item->id)
-//                ->first();
-//
-//            if ($userItem) {
-//                // Update item quantity
-//                DB::table('user_items')
-//                    ->where('user_id', $user->id)
-//                    ->where('item_id', $item->id)
-//                    ->increment('quantity', $request->quantity);
-//            } else {
-//
-//
-//                DB::table('user_items')->insert([
-//                    'user_id' => $user->id,
-//                    'item_id' => $item->id,
-//                    'quantity' => $request->quantity,
-//                    'created_at' => now(),
-//                    'updated_at' => now(),
-//                ]);
-//            }
-//
-//            DB::commit();
-//
-//            return response()->json(['message' => 'Item purchased successfully'], 200);
-//        } catch (\Exception $e) {
-//            DB::rollBack();
-//            return response()->json(['error' => $e->getMessage()], 500);
-//        }
-//    }
 
 
 

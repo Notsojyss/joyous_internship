@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\MarketController;
+use App\Http\Controllers\PvpController;
 
 
 Route::post('/user/create', [UserController::class, 'createUser']);
@@ -23,3 +24,6 @@ Route::middleware('auth:sanctum')->post('/market/cancelsellitem', [MarketControl
 Route::middleware('auth:sanctum')->get('/market/get-activelisting', [MarketController::class, 'getActive']);
 Route::middleware('auth:sanctum')->get('/market/get-useritemforsale', [MarketController::class, 'getUserItemForSale']);
 Route::middleware('auth:sanctum')->get('/market/get-itemhistory', [MarketController::class, 'getItemHistory']);
+Route::middleware('auth:sanctum')->post('/pvp/assignPlay', [PvpController::class, 'assignPlay']);
+Route::middleware('auth:sanctum')->get('/pvp/get-pvpbattles', [PvpController::class, 'getPvpBattles']);
+Route::middleware('auth:sanctum')->post('/pvp/join-battle/{pvpId}', [PvpController::class, 'joinBattle']);
