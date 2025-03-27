@@ -142,7 +142,7 @@ class PvpController extends Controller
             $winnerMessage = "Host wins!";
         } elseif ($rules[$pvp->opponent_play] === $pvp->host_play) {
             $winnerId = $pvp->opponent_id;
-            $winnerMessage = "Opponent wins!";
+            $winnerMessage = "You win! You gained!" . $prizeMoney;
         }
 
         if ($winnerId) {
@@ -155,12 +155,20 @@ class PvpController extends Controller
 
                 DB::table('users')->where('id', $winnerId)->increment('money', $prizeMoney);
             });
+        } else { // It's a draw, refund both players
+            DB::transaction(function () use ($pvp) {
+                DB::table('users')->where('id', $pvp->host_id)->increment('money', $pvp->money_betted);
+                DB::table('users')->where('id', $pvp->opponent_id)->increment('money', $pvp->money_betted);
+            });
         }
 
         return response()->json([
             'message' => $winnerMessage,
             'winner_id' => $winnerId,
+
+
         ]);
+
     }
 
 
