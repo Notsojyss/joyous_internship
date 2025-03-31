@@ -15,7 +15,10 @@ class PvpController extends Controller
             ->join('users', 'pvp.host_id', '=', 'users.id')
             ->where('pvp.status', 'waiting')
             ->select(
-                'pvp.*',
+                'pvp.host_id',
+                'pvp.id',
+                'pvp.money_betted',
+//                'pvp.host_play as hostplay',
                 'users.id as users_id',
                 'users.username as username'
             )
@@ -24,6 +27,38 @@ class PvpController extends Controller
         return response()->json($pvpbattles);
 
     }
+    public function getHostPlay($pvpId){
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        $pvp = DB::table('pvp')
+            ->where('id', $pvpId)
+            ->select('host_play')
+            ->first();
+
+        return response()->json($pvp);
+    }
+    public function getPvpHistory(){
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        $pvphistory = DB::table('pvp')
+            ->join('users as host', 'pvp.host_id', '=', 'host.id')
+            ->join('users as opponent', 'pvp.opponent_id', '=', 'opponent.id')
+            ->join('users as winner', 'pvp.winner_id', '=', 'winner.id')
+            ->where('pvp.status', 'finished')
+            ->select(
+                'host.username as hostname',
+                'opponent.username as opponentname',
+                'pvp.money_betted',
+                'winner.username as winnername',
+                'pvp.updated_at as battletime'
+            )
+            ->get();
+
+        return response()->json($pvphistory);
+    }
+
     public function assignPlay(Request $request)
     {
         try {
@@ -139,10 +174,10 @@ class PvpController extends Controller
 
         if ($rules[$pvp->host_play] === $pvp->opponent_play) {
             $winnerId = $pvp->host_id;
-            $winnerMessage = "Host wins!";
+            $winnerMessage = "You Lose !";
         } elseif ($rules[$pvp->opponent_play] === $pvp->host_play) {
             $winnerId = $pvp->opponent_id;
-            $winnerMessage = "You win! You gained!" . $prizeMoney;
+            $winnerMessage = "You win! You gained! " . $prizeMoney;
         }
 
         if ($winnerId) {
