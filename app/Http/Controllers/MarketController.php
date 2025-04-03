@@ -255,6 +255,7 @@ class MarketController extends Controller
                 'market_listings.updated_at as market_updated_at',
                 'users.username',
             )
+            ->orderByDesc('market_listings.updated_at')
             ->get();
 
         return response()->json($itemhistory);

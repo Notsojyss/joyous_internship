@@ -54,6 +54,7 @@ class PvpController extends Controller
                 'winner.username as winnername',
                 'pvp.updated_at as battletime'
             )
+            ->orderByDesc('pvp.updated_at')
             ->get();
 
         return response()->json($pvphistory);
@@ -205,6 +206,28 @@ class PvpController extends Controller
         ]);
 
     }
+    public function getLeaderboard()
+    {
+        $leaderboard = DB::table('pvp')
+            ->join('users', 'pvp.winner_id', '=', 'users.id')
+            ->select(
+                'users.id',
+                'users.username',
+                DB::raw('COUNT(pvp.winner_id) as wins'),
+                DB::raw('SUM(pvp.money_betted) as total_money_won') // Sum only for winners
+            )
+            ->whereNotNull('pvp.winner_id') // Exclude unfinished or drawn matches
+            ->groupBy('users.id', 'users.username')
+            ->orderByDesc('wins')
+            ->orderByDesc('total_money_won')
+            ->orderBy('users.id')
+            ->limit(10) // Adjust limit as needed
+            ->get();
+
+        return response()->json($leaderboard);
+    }
+
+
 
 
 }
