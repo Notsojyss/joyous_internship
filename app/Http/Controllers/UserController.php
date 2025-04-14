@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Item;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -12,106 +13,77 @@ use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
+    private $userService;
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
 
-public function createUser(Request $request){
+    /**
+     * @param Request $request
+     * @return mixed
+     */
+    public function createUser(Request $request){
 //dd($request->name);
 
-return User::create(['full_name' => $request->full_name,
-    'first_name' => $request->first_name,
-    'last_name' => $request->last_name,
-    'username' => $request->username,
-    'email' => $request->email,
-    'password' => $request->password ]);
+        return User::create(['full_name' => $request->full_name,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => $request->password ]);
 
-}
-public function getAll( ){
+    }
 
-    User::get();
+    /**
+     * @return void
+     */
+    public function getAll( ){
 
-}
+        User::get();
+
+    }
+
+    /**
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
 public function getUserItems(Request $request) {
-    $userId = auth()->id(); // Get the logged-in user's ID
 
-    $items = DB::table('users')
-        ->leftJoin('user_items', 'users.id', '=', 'user_items.user_id')
-        ->leftJoin('items', 'user_items.item_id', '=', 'items.id')
-        ->select(
-            'users.id as user_id',
-            'users.full_name',
-            'users.first_name',
-            'users.last_name',
-            'users.email',
-            'users.username',
-            'items.item_name',
-            'items.description',
-            'items.rarity',
-            'items.image',
-            'user_items.item_id as item_id',
-            'user_items.quantity',
-        )
-        ->where('users.id', $userId)
-        ->get()
-        ->groupBy('user_id')
-        ->map(function ($items) {
-            $user = $items->first();
-
-            return [
-                'user_id' => $user->user_id,
-                'full_name' => $user->full_name,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'username' => $user->username,
-                'email' => $user->email,
-                'items' => $items->map(function ($item) {
-                    return [
-                        'item_name' => $item->item_name,
-                        'item_id' => $item->item_id,
-                        'description' => $item->description,
-                        'rarity' => $item->rarity,
-                        'image' => $item->image,
-                        'quantity' => $item->quantity
-                    ];
-                })->toArray()
-            ];
-        })
-        ->values(); // Convert collection to array
-
-    return response()->json($items);
-
-
-
+        return $this->userService->getUserItems();
 //    // Eloquent
 //    return User::with(['items'])->get();
 }
 
 
-public function getMoney(Request $request)
-{
-    try {
-        $user = auth()->user();
-        if (!$user) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+    public function getMoney(Request $request)
+    {
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+            return response()->json(['money' => $user->money], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-        return response()->json(['money' => $user->money], 200);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
     }
-}
 
-public function updateUser(Request $request){
-    //dd($request->name);
+    public function updateUser(Request $request){
+        //dd($request->name);
 
-    // $user = User::find(1);
-    // $user -> name = "joyG";
-    // $user -> email = "jys@gmail.com";
-    // $user -> password = "12345";
+        // $user = User::find(1);
+        // $user -> name = "joyG";
+        // $user -> email = "jys@gmail.com";
+        // $user -> password = "12345";
 
-    // return $user;
-     User::where('email', $request->email)->update(['name'=> $request->name]);
+        // return $user;
+        User::where('email', $request->email)->update(['name'=> $request->name]);
 
     }
     // TODO DELETE BASED ON ID
-public function deleteUser(Request $request){
+    public function deleteUser(Request $request){
         // dd('test');
         //return User::where('id', $request->id)->delete(); // improve by having try catch
         try {
@@ -155,8 +127,5 @@ public function deleteUser(Request $request){
         $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logged out successfully']);
     }
-
-
-
 
 }

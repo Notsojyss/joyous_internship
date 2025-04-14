@@ -1,12 +1,18 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class PvpController extends Controller
 {
+    private $userService;
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
     public function getPvpBattles(){
         if (!Auth::check()) {
             return response()->json(['message' => 'Unauthorized'], 401);
