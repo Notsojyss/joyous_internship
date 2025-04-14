@@ -2,21 +2,18 @@
 
 namespace App\Http\Controllers;
 use App\Models\Item;
+use App\Services\ItemService;
 use Illuminate\Http\Request;
 
 class ItemController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function getAllitems(Request $request)
-    {
-
-        return Item::get();
+    private ItemService $itemService;
+    public function __construct(ItemService $itemService){
+        $this->itemService = $itemService;
     }
-    public function getShopitems(Request $request)
+    public function getShopitems()
     {
-        return Item::get();
+        return $this->itemService->getShopitems();
     }
 
 

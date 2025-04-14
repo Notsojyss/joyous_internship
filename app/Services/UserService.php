@@ -2,10 +2,22 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
+    public function createUser(Request $request){
+            return User::create(['full_name' => $request->full_name,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => $request->password ]);
+
+        }
     public function getUserItems()
     {
         $userId = auth()->id(); // Get the logged-in user's ID
@@ -57,9 +69,38 @@ class UserService
         return response()->json($items);
     }
 
-
-    public function getDescriptions()
+    public function getMoney(Request $request)
     {
-        return 'description';
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+            return response()->json(['money' => $user->money], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+    public function loginUser(Request $request)
+    {
+        $request->validate([
+            'username' => 'required',
+            'password' => 'required',
+        ]);
+
+        // Find user by username
+        $user = User::where('username', $request->username)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Invalids username or password'], 401);
+        }
+        // Generate Sanctum Token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Logins successful',
+            'token' => $token,
+            'user' => $user
+        ]);
     }
 }
