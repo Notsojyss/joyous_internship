@@ -29,4 +29,5 @@ Route::middleware('auth:sanctum')->get('/pvp/get-pvpbattles', [PvpController::cl
 Route::middleware('auth:sanctum')->post('/pvp/join-battle/{pvpId}', [PvpController::class, 'joinBattle']);
 Route::middleware('auth:sanctum')->get('/pvp/get-HostPlay/{pvpId}', [PvpController::class, 'getHostPlay']);
 Route::middleware('auth:sanctum')->get('/pvp/getPvpHistory', [PvpController::class, 'getPvpHistory']);
+Route::middleware('auth:sanctum')->get('/pvp/getMyPvpHistory', [PvpController::class, 'getMyPvpHistory']);
 Route::middleware('auth:sanctum')->get('/pvp/getLeaderboard', [PvpController::class, 'getLeaderboard']);

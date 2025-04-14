@@ -59,6 +59,29 @@ class PvpController extends Controller
 
         return response()->json($pvphistory);
     }
+    public function getMyPvpHistory(){
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        $mypvphistory = DB::table('pvp')
+            ->join('users as host', 'pvp.host_id', '=', 'host.id')
+            ->join('users as opponent', 'pvp.opponent_id', '=', 'opponent.id')
+            ->join('users as winner', 'pvp.winner_id', '=', 'winner.id')
+            ->where('pvp.host_id',  Auth::id())
+            ->where('pvp.opponent_id',  Auth::id())
+            ->where('pvp.status', 'finished')
+            ->select(
+                'host.username as hostname',
+                'opponent.username as opponentname',
+                'pvp.money_betted',
+                'winner.username as winnername',
+                'pvp.updated_at as battletime'
+            )
+            ->orderByDesc('pvp.updated_at')
+            ->get();
+
+        return response()->json($mypvphistory);
+    }
 
     public function assignPlay(Request $request)
     {
