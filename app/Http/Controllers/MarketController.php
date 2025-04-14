@@ -41,7 +41,7 @@ class MarketController extends Controller
             'price' => 'required|numeric|min:0.01',
         ]);
 
-        $user = Auth::user(); // Use Auth facade
+        $user = Auth::user();
         $itemId = $request->item_id;
         $quantity = $request->quantity;
         $price = $request->price;

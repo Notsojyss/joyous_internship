@@ -52,7 +52,7 @@ public function getUserItems(Request $request) {
         ->where('users.id', $userId)
         ->get()
         ->groupBy('user_id')
-        ->map(function ($items, $userId) {
+        ->map(function ($items) {
             $user = $items->first();
 
             return [
@@ -140,7 +140,6 @@ public function deleteUser(Request $request){
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid username or password'], 401);
         }
-
         // Generate Sanctum Token
         $token = $user->createToken('auth_token')->plainTextToken;
 
