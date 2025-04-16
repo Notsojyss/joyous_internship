@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\DB;
 
 class MarketService
 {
+    /**
+     * Get the active status in market listings table
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getActive()
     {
         if (!Auth::check()) {
@@ -31,6 +35,12 @@ class MarketService
 
         return response()->json($listings);
     }
+
+    /**
+     * Sell item of the user, passes the item from users inventory to the market
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function sellItem(Request $request)
     {
         $request->validate([
@@ -74,6 +84,12 @@ class MarketService
 
         return response()->json(['message' => 'Item listed on the market'], 200);
     }
+
+    /**
+     * fetch the item list that a user is selling
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getUserItemForSale(Request $request)
     {
         $userId = auth()->id(); // Get the logged-in user's ID
@@ -100,6 +116,11 @@ class MarketService
         return response()->json($items);
     }
 
+    /**
+     * Cancel the listing, this return the item from market_listing to users inventory
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function cancelListing(Request $request)
     {
         $request->validate([
@@ -128,6 +149,12 @@ class MarketService
 
         return response()->json(['message' => 'Listing canceled and item returned'], 200);
     }
+
+    /**
+     * Buy item from either the market or official shop
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
 
     public function buyItem(Request $request)
     {
@@ -229,6 +256,12 @@ class MarketService
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Get the history of item sold in each type of item
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getItemHistory(Request $request)
     {
         $user = auth()->user();

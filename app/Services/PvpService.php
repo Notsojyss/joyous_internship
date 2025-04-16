@@ -2,32 +2,61 @@
 
 namespace App\Services;
 use App\Models\User;
+use App\Models\UserItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use App\Models\Pvp;
 use Illuminate\Support\Facades\Hash;
 class PvpService
 {
+    /**
+     * get the Battles with waiting status
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getPvpBattles(){
-        if (!Auth::check()) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
-        $pvpbattles = DB::table('pvp')
-            ->join('users', 'pvp.host_id', '=', 'users.id')
-            ->where('pvp.status', 'waiting')
-            ->select(
-                'pvp.host_id',
-                'pvp.id',
-                'pvp.money_betted',
-//                'pvp.host_play as hostplay',
-                'users.id as users_id',
-                'users.username as username'
-            )
+
+        $pvpbattles = Pvp::where('status', 'waiting')
+            ->whereHas('user', function ($query) {
+                $query->whereNull('deleted_at');
+            })
+            ->with(['user:id,first_name'])
+            ->select('id', 'money_betted', 'status', 'host_id')
             ->get();
 
         return response()->json($pvpbattles);
 
+//        if (!Auth::check()) {
+//            return response()->json(['message' => 'Unauthorized'], 401);
+//        }
+//        $pvpbattles = DB::table('pvp')
+//            ->join('users', 'pvp.host_id', '=', 'users.id')
+//            ->where('pvp.status', 'waiting')
+//            ->select(
+//                'pvp.host_id',
+//                'pvp.id',
+//                'pvp.money_betted',
+////                'pvp.host_play as hostplay',
+//                'users.id as users_id',
+//                'users.username as username'
+//            )
+//            ->get();
+//
+//        return response()->json($pvpbattles);
+
     }
+
+    /**
+     * get the play of the battle host
+     * @param $pvpId
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getHostPlay($pvpId){
         if (!Auth::check()) {
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -39,6 +68,11 @@ class PvpService
 
         return response()->json($pvp);
     }
+
+    /**
+     * get the history logs of the battles finished by all of the users
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getPvpHistory(){
         if (!Auth::check()) {
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -60,11 +94,16 @@ class PvpService
 
         return response()->json($pvphistory);
     }
+
+    /**
+     * get the history of pvp battles of the logged in user
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getMyPvpHistory(){
+
         if (!Auth::check()) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-//        $userId = auth()->user();
         $userId = Auth::id();
 
 
@@ -86,6 +125,12 @@ class PvpService
             ->get();
         return response()->json($mypvphistory);
     }
+
+    /**
+     * Assigning the play of the host when creating a battle
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function assignPlay(Request $request)
     {
         try {
@@ -132,6 +177,13 @@ class PvpService
             ], 500);
         }
     }
+
+    /**
+     * Joining a battle created by a host, this is for the user that wants to join the pvp
+     * @param Request $request
+     * @param $pvpId
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function joinBattle(Request $request, $pvpId)
     {
         try {
@@ -181,6 +233,12 @@ class PvpService
             ], 500);
         }
     }
+
+    /**
+     * Function that automatically compute whos the winner and store the message to be passed to vue
+     * @param $pvpId
+     * @return \Illuminate\Http\JsonResponse
+     */
     private function determineWinner($pvpId)
     {
         $pvp = DB::table('pvp')->where('id', $pvpId)->first();
@@ -232,6 +290,11 @@ class PvpService
         ]);
 
     }
+
+    /**
+     * get the leaderboard of players with most wins
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getLeaderboard()
     {
         $leaderboard = DB::table('pvp')
