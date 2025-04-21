@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserItem;
+use Illuminate\Support\Facades\Validator;
 
 class UserService
 {
@@ -16,8 +17,10 @@ class UserService
      * @param Request $request
      * @return mixed
      */
-    public function createUser(Request $request){
-        $request->validate([
+    public function createUser(Request $request)
+    {
+        // Validate the incoming data
+        $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username',
@@ -25,49 +28,40 @@ class UserService
             'password' => 'required|string|min:8',
         ]);
 
-        try {
-             User::create([
-                'full_name' => $request->first_name . ' ' . $request->last_name,
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'username' => $request->username,
-                'email' => $request->email,
-                'password' => $request->password,
-            ]);
-
-            return response()->json([
-                'status' => 'success',
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to create user.',
-                'error' => $e->getMessage()
-            ], 500);
+        // Check if validation fails
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        }
+        // Create the user using mass assignment
+        $user = User::create([
+            'full_name' => $request->first_name . ' ' . $request->last_name,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => $request->password,
+        ]);
+
+        // Return a success response with the created user
+        return response()->json(['message' => 'User created successfully', 'user' => $user], 201);
+    }
         public function updateUser(Request $request){
-            $request->validate([
+            $validated = $request->validate([
                 'first_name' => 'required|string|max:255',
                 'last_name'  => 'required|string|max:255',
                 'email'      => 'required|email|unique:users,email,' . Auth::id(),
             ]);
-
+            $validated['full_name'] = $request->first_name . " " . $request->last_name;
             $user = Auth::user();
-            $user->update([
-                'first_name' => $request->first_name,
-                'last_name'  => $request->last_name,
-                'full_name'  => $request->first_name . ' ' . $request->last_name,
-                'email'      => $request->email,
-            ]);
+            $user->update($validated);
 
-            return $user;
+            return response()->json(['message' => 'Profile updated successfully.', 'user' => $user], 201);
+
         }
-        public function fetchUser(Request $request){
+        public function fetchUser(){
             $user = Auth::user();
-            $user->get();
-            return $user;
+            return response()->json($user);
         }
 
     /**
