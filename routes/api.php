@@ -14,6 +14,8 @@ Route::delete('/user/delete', [UserController::class, 'deleteUser']);
 Route::get('/users/get-all', [UserController::class, 'getAll']);
 Route::post('/user/login', [UserController::class, 'loginUser']);
 Route::middleware('auth:sanctum')->post('/user/logout', [UserController::class, 'logoutUser']);
+Route::middleware('auth:sanctum')->post('/user/update', [UserController::class, 'updateUser']);
+Route::middleware('auth:sanctum')->get('/user/fetch', [UserController::class, 'fetchUser']);
 Route::get('/items/get-all', [ItemController::class, 'getAllitems']);
 Route::get('/item/get-shopitems', [ItemController::class, 'getShopitems']);
 Route::middleware(['auth:sanctum'])->post('/buy-item', [MarketController::class, 'buyItem']);

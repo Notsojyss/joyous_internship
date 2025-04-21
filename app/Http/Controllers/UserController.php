@@ -78,5 +78,11 @@ class UserController extends Controller
         $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logged out successfully']);
     }
+    public function updateUser (Request $request){
+         return $this->userService->updateUser($request);
+    }
+    public function fetchUser(Request $request){
+        return $this->userService->fetchUser($request);
+    }
 
 }

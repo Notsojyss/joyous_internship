@@ -17,13 +17,57 @@ class UserService
      * @return mixed
      */
     public function createUser(Request $request){
-            return User::create(['full_name' => $request->full_name,
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+        ]);
+
+        try {
+             User::create([
+                'full_name' => $request->first_name . ' ' . $request->last_name,
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'username' => $request->username,
                 'email' => $request->email,
-                'password' => $request->password ]);
+                'password' => $request->password,
+            ]);
 
+            return response()->json([
+                'status' => 'success',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to create user.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
+        }
+        public function updateUser(Request $request){
+            $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name'  => 'required|string|max:255',
+                'email'      => 'required|email|unique:users,email,' . Auth::id(),
+            ]);
+
+            $user = Auth::user();
+            $user->update([
+                'first_name' => $request->first_name,
+                'last_name'  => $request->last_name,
+                'full_name'  => $request->first_name . ' ' . $request->last_name,
+                'email'      => $request->email,
+            ]);
+
+            return $user;
+        }
+        public function fetchUser(Request $request){
+            $user = Auth::user();
+            $user->get();
+            return $user;
         }
 
     /**
