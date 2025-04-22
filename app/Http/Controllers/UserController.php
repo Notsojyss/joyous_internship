@@ -78,9 +78,21 @@ class UserController extends Controller
         $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logged out successfully']);
     }
+
+    /**
+     * For updating user's data; this use the updateUser from UserService
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function updateUser (Request $request){
          return $this->userService->updateUser($request);
     }
+
+    /**
+     * Fetching the user; uses the fetchUser from User Service
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function fetchUser(Request $request){
         return $this->userService->fetchUser($request);
     }

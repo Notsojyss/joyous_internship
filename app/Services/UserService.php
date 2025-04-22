@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\Validator;
 class UserService
 {
     /**
-     * creation of user
+     * For creation of User
      * @param Request $request
-     * @return mixed
+     * @return \Illuminate\Http\JsonResponse
      */
     public function createUser(Request $request)
     {
@@ -46,19 +46,32 @@ class UserService
         // Return a success response with the created user
         return response()->json(['message' => 'User created successfully', 'user' => $user], 201);
     }
+
+    /**
+     * Updating User's data
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
         public function updateUser(Request $request){
             $validated = $request->validate([
+                'username' => 'required|unique:users,username,'. Auth::id(),
                 'first_name' => 'required|string|max:255',
                 'last_name'  => 'required|string|max:255',
                 'email'      => 'required|email|unique:users,email,' . Auth::id(),
             ]);
             $validated['full_name'] = $request->first_name . " " . $request->last_name;
+            $validated['updated_at'] = now();
             $user = Auth::user();
             $user->update($validated);
 
             return response()->json(['message' => 'Profile updated successfully.', 'user' => $user], 201);
 
         }
+
+    /**
+     * Fetching the user's data
+     * @return \Illuminate\Http\JsonResponse
+     */
         public function fetchUser(){
             $user = Auth::user();
             return response()->json($user);

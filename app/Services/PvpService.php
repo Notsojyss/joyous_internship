@@ -83,10 +83,10 @@ class PvpService
             ->join('users as winner', 'pvp.winner_id', '=', 'winner.id')
             ->where('pvp.status', 'finished')
             ->select(
-                'host.username as hostname',
-                'opponent.username as opponentname',
+                'host.first_name as hostname',
+                'opponent.first_name as opponentname',
                 'pvp.money_betted',
-                'winner.username as winnername',
+                'winner.first_name as winnername',
                 'pvp.updated_at as battletime'
             )
             ->orderByDesc('pvp.updated_at')
@@ -115,10 +115,10 @@ class PvpService
             ->orWhere('pvp.opponent_id',$userId)
             ->where('pvp.status', 'finished')
             ->select(
-                'host.username as hostname',
-                'opponent.username as opponentname',
+                'host.first_name as hostname',
+                'opponent.first_name as opponentname',
                 'pvp.money_betted',
-                'winner.username as winnername',
+                'winner.first_name as winnername',
                 'pvp.updated_at as battletime'
             )
             ->orderByDesc('pvp.updated_at')
@@ -301,12 +301,13 @@ class PvpService
             ->join('users', 'pvp.winner_id', '=', 'users.id')
             ->select(
                 'users.id',
-                'users.username',
+                'users.first_name',
                 DB::raw('COUNT(pvp.winner_id) as wins'),
                 DB::raw('SUM(pvp.money_betted) as total_money_won') // Sum only for winners
             )
             ->whereNotNull('pvp.winner_id') // Exclude unfinished or drawn matches
-            ->groupBy('users.id', 'users.username')
+            ->whereNull('users.deleted_at')
+            ->groupBy('users.id', 'users.first_name')
             ->orderByDesc('wins')
             ->orderByDesc('total_money_won')
             ->orderBy('users.id')
